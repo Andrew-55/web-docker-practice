@@ -1,0 +1,51 @@
+version: "3.3"
+
+volumes:
+  db-dump:
+
+services:
+  app:
+    depends_on:
+    - db
+    - redis
+    image: web-docker-homework
+    build: 
+      context: ../../
+      dockerfile: ops-tools/docker/images/app/Dockerfile
+    volumes:
+    - ../../:/app
+    entrypoint: >
+      sh -c "npm run migration:run
+      && npm run start:dev"
+    restart: on-failure
+    ports:
+    - 8080:8888
+    networks:
+    - docker-practice-net
+ 
+  db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: school
+      POSTGRES_DB: school
+      PGDATA: ../../data/postgres 
+    volumes:
+    - ../../data/dump:/db-dump
+    ports:
+    - 5432:5432
+    networks:
+    - docker-practice-net
+
+  redis:  
+    image: "redis:5-alpine"
+    ports:
+    - 6379:6379
+    networks:
+    - docker-practice-net
+
+networks:
+  docker-practice-net:
+    driver: bridge
+ 
